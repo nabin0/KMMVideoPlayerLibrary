@@ -19,6 +19,8 @@ expect class VideoPlayerController {
     val listOfAudioFormats: MutableStateFlow<List<AudioTrack>?>
     val listOfCC: MutableStateFlow<List<ClosedCaptionForTrackSelector>?>
 
+    val currentPlayingMediaIndex: MutableStateFlow<Int>
+
     @Composable
     fun BuildPlayer(onPlayerCreated: (player: Any) -> Unit)
 
@@ -47,7 +49,7 @@ expect class VideoPlayerController {
 
     fun addPlayList(listOfVideos: List<VideoItem>)
 
-    fun setPlayList(listOfVideos: List<VideoItem>)
+    fun setPlayList(listOfVideos: List<VideoItem>, videoItemIndexInList: Int = 0)
 
     fun playNextFromPlaylist()
 

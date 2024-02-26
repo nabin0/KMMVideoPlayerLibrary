@@ -44,6 +44,7 @@ actual class VideoPlayerController {
     private var textTrackGroup: Any? = null
     private var trackGroupsList: List<Tracks.Group>? = null
 
+    actual val currentPlayingMediaIndex: MutableStateFlow<Int> = MutableStateFlow(-1)
 
     actual val listOfVideoResolutions: MutableStateFlow<List<VideoQuality>?> =
         MutableStateFlow(null)
@@ -142,6 +143,7 @@ actual class VideoPlayerController {
 
                     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                         super.onMediaItemTransition(mediaItem, reason)
+                        currentPlayingMediaIndex.value = exoPlayer?.currentMediaItemIndex ?: -1
                         currentSelectedVideoQuality = VideoQuality(-1, "Auto", -1)
                         currentSelectedCC = ClosedCaptionForTrackSelector(-1, "Off", name = null)
                         currentSelectedAudioTrack = null
@@ -463,7 +465,7 @@ actual class VideoPlayerController {
             exoPlayer?.addMediaItems(listOfMediaItems)
     }
 
-    actual fun setPlayList(listOfVideos: List<VideoItem>) {
+    actual fun setPlayList(listOfVideos: List<VideoItem>, videoItemIndexInList: Int) {
         val listOfMediaItems = mutableListOf<MediaItem>()
 
         for (videoItem in listOfVideos) {
@@ -471,7 +473,7 @@ actual class VideoPlayerController {
         }
 
         if (listOfMediaItems.isNotEmpty())
-            exoPlayer?.setMediaItems(listOfMediaItems)
+            exoPlayer?.setMediaItems(listOfMediaItems, videoItemIndexInList, 0)
     }
 
     actual fun playNextFromPlaylist() {

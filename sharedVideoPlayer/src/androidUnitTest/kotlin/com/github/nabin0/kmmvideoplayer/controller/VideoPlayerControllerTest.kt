@@ -27,6 +27,8 @@ class VideoPlayerControllerTest {
     fun `initial setup`() {
         MockKAnnotations.init(this, relaxed = true)
         videoPlayerController = VideoPlayerController()
+        mockkStatic(Uri::class)
+        every { Uri.parse(any()) }.returns(Uri.EMPTY)
     }
 
     @AfterTest
@@ -92,6 +94,7 @@ class VideoPlayerControllerTest {
         every { Uri.parse(any()) }.returns(Uri.EMPTY)
         initExoplayer()
         videoPlayerController.setMediaItem(VideoItem(
+            id = 1,
             videoUrl = "https://www.testurl.com",
             title = "title",
             videoDescription = null,
@@ -124,5 +127,33 @@ class VideoPlayerControllerTest {
         initExoplayer()
         videoPlayerController.releasePlayer()
     }
+
+
+    @Test
+    fun `addPlaylist should add playlist to exoplayer instance`(){
+        val sampleList = listOf(VideoItem(
+            id = 1,
+            videoUrl = "https://www.testurl.com",
+            title = "title",
+            videoDescription = null,
+            licenseUrl = null,
+            listOfClosedCaptions = null,
+            isDrmEnabled = false,
+            licenseToken = null,
+            certificateUrl = null
+        ))
+
+//        val buildMediaItemField=  VideoPlayerController::class.java.getDeclaredMethod("buildMediaItem")
+//        buildMediaItemField.isAccessible = true
+//        val mediaItem = buildMediaItemField.invoke(videoPlayerController, sampleList[0])
+//        assert(mediaItem is VideoItem)
+        initExoplayer()
+        videoPlayerController.addPlayList(sampleList)
+         // coVerify { exoPlayer.addMediaItem() }
+
+    }
+
+
+
 
 }

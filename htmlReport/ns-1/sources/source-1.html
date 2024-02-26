@@ -1,0 +1,695 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <title>Coverage Report > VideoPlayerController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.github.nabin0.kmmvideoplayer.controller</a>
+</div>
+
+<h1>Coverage Summary for Class: VideoPlayerController (com.github.nabin0.kmmvideoplayer.controller)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">VideoPlayerController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    32.4%
+  </span>
+  <span class="absValue">
+    (12/37)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    13.7%
+  </span>
+  <span class="absValue">
+    (37/271)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.github.nabin0.kmmvideoplayer.controller
+&nbsp;
+&nbsp;import android.app.Activity
+&nbsp;import android.content.pm.ActivityInfo
+&nbsp;import android.net.Uri
+&nbsp;import android.view.View
+&nbsp;import android.view.ViewGroup
+&nbsp;import android.view.WindowManager
+&nbsp;import androidx.annotation.OptIn
+&nbsp;import androidx.compose.runtime.Composable
+&nbsp;import androidx.compose.runtime.mutableStateListOf
+&nbsp;import androidx.compose.ui.Modifier
+&nbsp;import androidx.compose.ui.platform.LocalContext
+&nbsp;import androidx.compose.ui.viewinterop.AndroidView
+&nbsp;import androidx.media3.common.C
+&nbsp;import androidx.media3.common.MediaItem
+&nbsp;import androidx.media3.common.MediaItem.DrmConfiguration
+&nbsp;import androidx.media3.common.MediaMetadata
+&nbsp;import androidx.media3.common.MimeTypes
+&nbsp;import androidx.media3.common.PlaybackException
+&nbsp;import androidx.media3.common.Player
+&nbsp;import androidx.media3.common.Timeline
+&nbsp;import androidx.media3.common.TrackSelectionOverride
+&nbsp;import androidx.media3.common.Tracks
+&nbsp;import androidx.media3.common.util.UnstableApi
+&nbsp;import androidx.media3.common.util.Util
+<b class="nc">&nbsp;import androidx.media3.exoplayer.ExoPlayer</b>
+&nbsp;import androidx.media3.exoplayer.hls.HlsTrackMetadataEntry
+&nbsp;import com.github.nabin0.kmmvideoplayer.data.AudioTrack
+&nbsp;import com.github.nabin0.kmmvideoplayer.data.ClosedCaptionForTrackSelector
+&nbsp;import com.github.nabin0.kmmvideoplayer.data.VideoItem
+&nbsp;import com.github.nabin0.kmmvideoplayer.data.VideoQuality
+&nbsp;import kotlinx.coroutines.flow.MutableStateFlow
+&nbsp;
+<b class="fc">&nbsp;actual class VideoPlayerController {</b>
+&nbsp;
+&nbsp;    private var exoPlayer: ExoPlayer? = null
+<b class="fc">&nbsp;    private var currentSelectedVideoQuality = VideoQuality(-1, &quot;Auto&quot;, -1)</b>
+<b class="fc">&nbsp;    private var currentSelectedCC = ClosedCaptionForTrackSelector(-1, &quot;Off&quot;, name = &quot;Off&quot;)</b>
+&nbsp;    private var currentSelectedAudioTrack: AudioTrack? = null
+&nbsp;
+&nbsp;    private var audioTrackGroup: Any? = null
+&nbsp;    private var videoTrackGroup: Any? = null
+&nbsp;    private var textTrackGroup: Any? = null
+&nbsp;    private var trackGroupsList: List&lt;Tracks.Group&gt;? = null
+&nbsp;
+&nbsp;
+<b class="nc">&nbsp;    actual val listOfVideoResolutions: MutableStateFlow&lt;List&lt;VideoQuality&gt;?&gt; =</b>
+<b class="fc">&nbsp;        MutableStateFlow(null)</b>
+<b class="fc">&nbsp;    actual val listOfAudioFormats: MutableStateFlow&lt;List&lt;AudioTrack&gt;?&gt; = MutableStateFlow(null)</b>
+<b class="nc">&nbsp;    actual val listOfCC: MutableStateFlow&lt;List&lt;ClosedCaptionForTrackSelector&gt;?&gt; =</b>
+<b class="fc">&nbsp;        MutableStateFlow(null)</b>
+&nbsp;
+<b class="fc">&nbsp;    actual val mediaDuration: MutableStateFlow&lt;Long&gt; = MutableStateFlow(0L)</b>
+&nbsp;
+<b class="nc">&nbsp;    actual val isPlaying: MutableStateFlow&lt;Boolean&gt; =</b>
+<b class="fc">&nbsp;        MutableStateFlow(exoPlayer?.isPlaying ?: false)</b>
+&nbsp;
+<b class="nc">&nbsp;    actual val isBuffering: MutableStateFlow&lt;Boolean&gt; =</b>
+<b class="fc">&nbsp;        MutableStateFlow(true)</b>
+&nbsp;
+<b class="fc">&nbsp;    actual fun currentPosition(): Long = exoPlayer?.currentPosition ?: 0L</b>
+&nbsp;
+<b class="fc">&nbsp;    actual fun getCurrentPlaybackSpeed(): Float = currentPlaybackSpeed</b>
+&nbsp;
+&nbsp;    @Composable
+<b class="nc">&nbsp;    actual fun BuildPlayer(onPlayerCreated: (player: Any) -&gt; Unit) {</b>
+<b class="nc">&nbsp;        val context = LocalContext.current</b>
+<b class="nc">&nbsp;        exoPlayer = ExoPlayer.Builder(context).build().apply {</b>
+<b class="nc">&nbsp;            this.addListener(</b>
+<b class="nc">&nbsp;                object : Player.Listener {</b>
+&nbsp;
+&nbsp;                    @OptIn(UnstableApi::class)
+&nbsp;                    override fun onTracksChanged(tracks: Tracks) {
+&nbsp;                        super.onTracksChanged(tracks)
+&nbsp;                        listOfVideoResolutions.value = null
+&nbsp;                        listOfCC.value = null
+&nbsp;                        listOfAudioFormats.value = null
+&nbsp;
+&nbsp;
+&nbsp;                        trackGroupsList = tracks.groups
+&nbsp;
+&nbsp;                        getAvailableVideoResolutions(tracks)
+&nbsp;                        getAvailableSubtitleTracks(tracks)
+&nbsp;                        getAvailableAudioTracks(tracks)
+&nbsp;
+&nbsp;                    }
+&nbsp;
+&nbsp;
+&nbsp;                    override fun onEvents(
+&nbsp;                        player: Player,
+&nbsp;                        events: Player.Events,
+&nbsp;                    ) {
+&nbsp;                        super.onEvents(player, events)
+&nbsp;                        // Triggers collector when next media item is auto player after finishing first one
+&nbsp;                        mediaDuration.value = player.contentDuration
+&nbsp;                    }
+&nbsp;
+&nbsp;                    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+&nbsp;                    }
+&nbsp;
+&nbsp;                    override fun onPlaybackStateChanged(playbackState: Int) {
+&nbsp;                        super.onPlaybackStateChanged(playbackState)
+&nbsp;                        if (playbackState == ExoPlayer.STATE_READY &amp;&amp; (mediaDuration.value.toInt() == 0)) {
+&nbsp;                            mediaDuration.value = contentDuration
+&nbsp;                            isBuffering.value = false
+&nbsp;                        }
+&nbsp;
+&nbsp;
+&nbsp;                        when (playbackState) {
+&nbsp;                            Player.STATE_BUFFERING -&gt; {
+&nbsp;                                isBuffering.value = true
+&nbsp;                            }
+&nbsp;
+&nbsp;                            Player.STATE_READY -&gt; {
+&nbsp;                                isBuffering.value = false
+&nbsp;                            }
+&nbsp;
+&nbsp;                            Player.STATE_IDLE -&gt; {
+&nbsp;                                isBuffering.value = false
+&nbsp;                                exoPlayer?.prepare()
+&nbsp;                            }
+&nbsp;
+&nbsp;                            Player.STATE_ENDED -&gt; {
+&nbsp;
+&nbsp;                            }
+&nbsp;                        }
+&nbsp;
+&nbsp;                    }
+&nbsp;
+&nbsp;                    override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+&nbsp;                        super.onTimelineChanged(timeline, reason)
+&nbsp;                    }
+&nbsp;
+&nbsp;                    override fun onPlayerError(error: PlaybackException) {
+&nbsp;                    }
+&nbsp;
+&nbsp;                    override fun onIsPlayingChanged(isPlaying: Boolean) {
+&nbsp;                        super.onIsPlayingChanged(isPlaying)
+&nbsp;                        this@VideoPlayerController.isPlaying.value = isPlaying
+&nbsp;                    }
+&nbsp;
+&nbsp;                    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+&nbsp;                        super.onMediaItemTransition(mediaItem, reason)
+&nbsp;                        currentSelectedVideoQuality = VideoQuality(-1, &quot;Auto&quot;, -1)
+&nbsp;                        currentSelectedCC = ClosedCaptionForTrackSelector(-1, &quot;Off&quot;, name = null)
+&nbsp;                        currentSelectedAudioTrack = null
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            )
+<b class="nc">&nbsp;        }</b>
+<b class="nc">&nbsp;        exoPlayer?.let {</b>
+<b class="nc">&nbsp;            onPlayerCreated(it)</b>
+&nbsp;
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    private fun getAvailableVideoResolutions(tracks: Tracks) {
+<b class="nc">&nbsp;        try {</b>
+&nbsp;            // GET AVAILABLE VIDEO RESOLUTIONS
+<b class="nc">&nbsp;            val videoResolutions: MutableList&lt;VideoQuality&gt; = mutableListOf()</b>
+<b class="nc">&nbsp;            for (trackGroup in tracks.groups) {</b>
+&nbsp;                // Group level information.
+<b class="nc">&nbsp;                val trackType = trackGroup.type</b>
+<b class="nc">&nbsp;                val trackInGroupIsSelected = trackGroup.isSelected</b>
+<b class="nc">&nbsp;                val trackInGroupIsSupported = trackGroup.isSupported</b>
+&nbsp;
+<b class="nc">&nbsp;                if (trackType == C.TRACK_TYPE_VIDEO) {</b>
+<b class="nc">&nbsp;                    videoTrackGroup = trackGroup</b>
+<b class="nc">&nbsp;                    for (i in 0 until trackGroup.length) {</b>
+<b class="nc">&nbsp;                        val isSelected = trackGroup.isTrackSelected(i)</b>
+<b class="nc">&nbsp;                        val trackFormat = trackGroup.getTrackFormat(i)</b>
+<b class="nc">&nbsp;                        val trackIndex = i</b>
+<b class="nc">&nbsp;                        val trackName = &quot;${trackFormat.height} p&quot;</b>
+<b class="nc">&nbsp;                        val resolutionKey = trackFormat.height</b>
+<b class="nc">&nbsp;                        if (trackGroup.length == 1)</b>
+<b class="nc">&nbsp;                            currentSelectedVideoQuality = VideoQuality(-1, &quot;Auto&quot;, -1)</b>
+<b class="nc">&nbsp;                        videoResolutions.add(</b>
+<b class="nc">&nbsp;                            VideoQuality(</b>
+<b class="nc">&nbsp;                                trackIndex,</b>
+<b class="nc">&nbsp;                                trackName,</b>
+<b class="nc">&nbsp;                                resolutionKey</b>
+&nbsp;                            )
+&nbsp;                        )
+&nbsp;                    }
+&nbsp;
+<b class="nc">&nbsp;                    if (videoResolutions.isNotEmpty()) {</b>
+<b class="nc">&nbsp;                        videoResolutions.add(0, VideoQuality(-1, &quot;Auto&quot;, -1))</b>
+<b class="nc">&nbsp;                        videoResolutions.distinctBy { it.resolutionKey }</b>
+<b class="nc">&nbsp;                            ?.sortedByDescending { it.resolutionKey }</b>
+<b class="nc">&nbsp;                            ?.toMutableList()</b>
+<b class="nc">&nbsp;                            ?.takeIf { it.isNotEmpty() }</b>
+<b class="nc">&nbsp;                        listOfVideoResolutions.value = videoResolutions</b>
+&nbsp;                    } else {
+<b class="nc">&nbsp;                        listOfVideoResolutions.value = null</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;        } catch (e: Exception) {</b>
+<b class="nc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun getAvailableSubtitleTracks(tracks: Tracks) {
+<b class="nc">&nbsp;        try {</b>
+<b class="nc">&nbsp;            val subtitlesList = mutableStateListOf&lt;ClosedCaptionForTrackSelector&gt;()</b>
+<b class="nc">&nbsp;            subtitlesList.add(</b>
+<b class="nc">&nbsp;                ClosedCaptionForTrackSelector(</b>
+<b class="nc">&nbsp;                    -1,</b>
+<b class="nc">&nbsp;                    &quot;Off&quot;,</b>
+<b class="nc">&nbsp;                    name = &quot;Off&quot;</b>
+&nbsp;                )
+&nbsp;            )
+<b class="nc">&nbsp;            for (trackGroupIndex in 0 until tracks.groups.size) {</b>
+<b class="nc">&nbsp;                val trackGroup = tracks.groups[trackGroupIndex]</b>
+<b class="nc">&nbsp;                val trackType = trackGroup.type</b>
+<b class="nc">&nbsp;                if (trackType == C.TRACK_TYPE_TEXT) {</b>
+<b class="nc">&nbsp;                    textTrackGroup = trackGroup</b>
+<b class="nc">&nbsp;                    for (i in 0 until trackGroup.length) {</b>
+<b class="nc">&nbsp;                        val isSelected = trackGroup.isTrackSelected(i)</b>
+<b class="nc">&nbsp;                        val trackFormat = trackGroup.getTrackFormat(i)</b>
+<b class="nc">&nbsp;                        if (isSelected) {</b>
+<b class="nc">&nbsp;                            currentSelectedCC = ClosedCaptionForTrackSelector(</b>
+<b class="nc">&nbsp;                                index = trackGroupIndex,</b>
+<b class="nc">&nbsp;                                language = trackFormat.language.toString(),</b>
+<b class="nc">&nbsp;                                name = null</b>
+&nbsp;                            )
+&nbsp;                        }
+&nbsp;
+<b class="nc">&nbsp;                        subtitlesList.add(</b>
+<b class="nc">&nbsp;                            ClosedCaptionForTrackSelector(</b>
+<b class="nc">&nbsp;                                index = trackGroupIndex,</b>
+<b class="nc">&nbsp;                                language = trackFormat.language.toString(),</b>
+<b class="nc">&nbsp;                                name = trackFormat.language.toString()</b>
+&nbsp;                            )
+&nbsp;                        )
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+<b class="nc">&nbsp;            subtitlesList.distinctBy {</b>
+<b class="nc">&nbsp;                it.language</b>
+&nbsp;            }
+<b class="nc">&nbsp;            if (subtitlesList.isEmpty())</b>
+<b class="nc">&nbsp;                listOfCC.value = null</b>
+&nbsp;            else
+<b class="nc">&nbsp;                listOfCC.value = subtitlesList</b>
+&nbsp;
+<b class="nc">&nbsp;        } catch (e: Exception) {</b>
+<b class="nc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @OptIn(UnstableApi::class)
+&nbsp;    private fun getAvailableAudioTracks(tracks: Tracks) {
+<b class="nc">&nbsp;        try {</b>
+<b class="nc">&nbsp;            val audioTracks: MutableList&lt;AudioTrack&gt; = mutableListOf()</b>
+<b class="nc">&nbsp;            for (trackGroupIndex in 0 until tracks.groups.size) {</b>
+<b class="nc">&nbsp;                val trackGroup = tracks.groups[trackGroupIndex]</b>
+<b class="nc">&nbsp;                val trackType = trackGroup.type</b>
+<b class="nc">&nbsp;                val trackInGroupIsSelected = trackGroup.isSelected</b>
+<b class="nc">&nbsp;                val trackInGroupIsSupported = trackGroup.isSupported</b>
+<b class="nc">&nbsp;                if (trackType == C.TRACK_TYPE_AUDIO) {</b>
+<b class="nc">&nbsp;                    audioTrackGroup = trackGroup</b>
+<b class="nc">&nbsp;                    for (i in 0 until trackGroup.length) {</b>
+<b class="nc">&nbsp;                        val isSelected = trackGroup.isTrackSelected(i)</b>
+<b class="nc">&nbsp;                        val trackFormat = trackGroup.getTrackFormat(i)</b>
+<b class="nc">&nbsp;                        val trackMetadata = trackFormat.metadata?.get(0) as HlsTrackMetadataEntry</b>
+<b class="nc">&nbsp;                        val isSurround = trackMetadata.groupId == &quot;surround&quot;</b>
+<b class="nc">&nbsp;                        val isStereo = trackMetadata.groupId == &quot;stereo&quot;</b>
+&nbsp;
+<b class="nc">&nbsp;                        trackFormat.language?.let {</b>
+<b class="nc">&nbsp;                            if (isSelected) {</b>
+<b class="nc">&nbsp;                                currentSelectedAudioTrack = AudioTrack(</b>
+<b class="nc">&nbsp;                                    index = trackGroupIndex,</b>
+<b class="nc">&nbsp;                                    language = &quot;${trackMetadata.name} ${trackMetadata.groupId}-$it&quot;,</b>
+<b class="nc">&nbsp;                                    name = trackFormat.language,</b>
+<b class="nc">&nbsp;                                    isStereo = isStereo,</b>
+<b class="nc">&nbsp;                                    isSurround = isSurround,</b>
+<b class="nc">&nbsp;                                    audioTrackGroupIndex = i</b>
+&nbsp;                                )
+&nbsp;                            }
+&nbsp;
+<b class="nc">&nbsp;                            audioTracks.add(</b>
+<b class="nc">&nbsp;                                AudioTrack(</b>
+<b class="nc">&nbsp;                                    index = trackGroupIndex,</b>
+<b class="nc">&nbsp;                                    language = &quot;${trackMetadata.name} ${trackMetadata.groupId}-$it&quot;,</b>
+<b class="nc">&nbsp;                                    name = trackFormat.language,</b>
+<b class="nc">&nbsp;                                    isStereo = isStereo,</b>
+<b class="nc">&nbsp;                                    isSurround = isSurround,</b>
+<b class="nc">&nbsp;                                    audioTrackGroupIndex = i</b>
+&nbsp;                                )
+&nbsp;                            )
+&nbsp;                        }
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            listOfAudioFormats.value = audioTracks</b>
+&nbsp;
+<b class="nc">&nbsp;        } catch (e: Exception) {</b>
+<b class="nc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    actual fun prepare() {
+<b class="fc">&nbsp;        exoPlayer?.prepare()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun play() {
+<b class="fc">&nbsp;        exoPlayer?.play()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun pause() {
+<b class="fc">&nbsp;        exoPlayer?.pause()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun playWhenReady(boolean: Boolean) {
+<b class="fc">&nbsp;        exoPlayer?.playWhenReady = boolean</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun setMediaItem(
+&nbsp;        videoItem: VideoItem,
+&nbsp;    ) {
+<b class="fc">&nbsp;        exoPlayer?.setMediaItem(</b>
+<b class="fc">&nbsp;            buildMediaItem(videoItem)</b>
+&nbsp;        )
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun buildMediaItem(
+&nbsp;        videoItem: VideoItem,
+&nbsp;    ): MediaItem {
+<b class="fc">&nbsp;        val mediaItemBuilder = MediaItem.Builder()</b>
+<b class="fc">&nbsp;            .setUri(videoItem.videoUrl)</b>
+<b class="fc">&nbsp;            .setMediaId(videoItem.videoUrl.toString())</b>
+<b class="fc">&nbsp;            .setTag(videoItem.title.toString())</b>
+<b class="fc">&nbsp;            .setMediaMetadata(</b>
+<b class="fc">&nbsp;                MediaMetadata.Builder()</b>
+<b class="fc">&nbsp;                    .setDisplayTitle(videoItem.title)</b>
+<b class="fc">&nbsp;                    .build()</b>
+&nbsp;            )
+<b class="fc">&nbsp;        var mediaItem: MediaItem</b>
+<b class="fc">&nbsp;        try {</b>
+<b class="fc">&nbsp;            when (Util.inferContentType(Uri.parse(videoItem.videoUrl))) {</b>
+<b class="nc">&nbsp;                C.CONTENT_TYPE_SS -&gt; mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_SS)</b>
+&nbsp;                C.CONTENT_TYPE_DASH -&gt; {
+<b class="nc">&nbsp;                    mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_MPD)</b>
+<b class="nc">&nbsp;                    videoItem.licenseUrl?.let {</b>
+<b class="nc">&nbsp;                        mediaItemBuilder.setDrmConfiguration(</b>
+<b class="nc">&nbsp;                            DrmConfiguration.Builder(C.WIDEVINE_UUID)</b>
+<b class="nc">&nbsp;                                .setLicenseUri(videoItem.licenseUrl).build()</b>
+&nbsp;                        )
+&nbsp;                    }
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                C.CONTENT_TYPE_HLS -&gt; mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_M3U8)</b>
+<b class="nc">&nbsp;                C.CONTENT_TYPE_OTHER -&gt; mediaItemBuilder.setMimeType(MimeTypes.APPLICATION_MP4)</b>
+&nbsp;                else -&gt; {}
+&nbsp;            }
+&nbsp;
+&nbsp;            // if (isDRMEnabled) {
+<b class="nc">&nbsp;            val drmUuid = C.WIDEVINE_UUID</b>
+<b class="nc">&nbsp;            val requestHeaders = mapOf(&quot;X-AxDRM-Message&quot; to videoItem.licenseToken.toString())</b>
+<b class="nc">&nbsp;            val drmConfiguration = DrmConfiguration.Builder(drmUuid)</b>
+<b class="nc">&nbsp;                .setLicenseRequestHeaders(requestHeaders)</b>
+<b class="nc">&nbsp;                .setLicenseUri(videoItem.licenseUrl)</b>
+<b class="nc">&nbsp;                .build()</b>
+<b class="nc">&nbsp;            mediaItemBuilder.setDrmConfiguration(drmConfiguration)</b>
+&nbsp;            // }
+&nbsp;
+<b class="nc">&nbsp;            mediaItemBuilder.setDrmConfiguration(drmConfiguration)</b>
+<b class="nc">&nbsp;            mediaItem = if (videoItem.listOfClosedCaptions != null) {</b>
+<b class="nc">&nbsp;                val listOfSubtitleConfiguration = mutableListOf&lt;MediaItem.SubtitleConfiguration&gt;()</b>
+&nbsp;
+<b class="nc">&nbsp;                for (cc in videoItem.listOfClosedCaptions) {</b>
+<b class="nc">&nbsp;                    listOfSubtitleConfiguration.add(</b>
+<b class="nc">&nbsp;                        MediaItem.SubtitleConfiguration.Builder(Uri.parse(cc.subtitleLink))</b>
+<b class="nc">&nbsp;                            .setMimeType(MimeTypes.APPLICATION_SUBRIP)</b>
+<b class="nc">&nbsp;                            .setLanguage(cc.language)</b>
+<b class="nc">&nbsp;                            .setSelectionFlags(C.SELECTION_FLAG_DEFAULT)</b>
+<b class="nc">&nbsp;                            .build()</b>
+&nbsp;                    )
+&nbsp;                }
+<b class="nc">&nbsp;                mediaItemBuilder.setSubtitleConfigurations(listOfSubtitleConfiguration).build()</b>
+<b class="nc">&nbsp;            } else {</b>
+<b class="nc">&nbsp;                mediaItemBuilder.build()</b>
+&nbsp;            }
+<b class="nc">&nbsp;            return mediaItem</b>
+<b class="fc">&nbsp;        } catch (e: Exception) {</b>
+<b class="fc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        mediaItem = mediaItemBuilder.build()</b>
+<b class="fc">&nbsp;        return mediaItem</b>
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    @Composable
+<b class="nc">&nbsp;    actual fun PlayerView(useDefaultController: Boolean, modifier: Modifier) {</b>
+<b class="nc">&nbsp;        AndroidView(modifier = modifier, factory = {</b>
+&nbsp;            androidx.media3.ui.PlayerView(it)
+&nbsp;        }) {
+&nbsp;            it.player = exoPlayer
+&nbsp;            it.useController = useDefaultController
+&nbsp;            it.layoutParams = ViewGroup.LayoutParams(
+&nbsp;                ViewGroup.LayoutParams.MATCH_PARENT,
+&nbsp;                ViewGroup.LayoutParams.MATCH_PARENT
+&nbsp;
+&nbsp;            )
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;
+&nbsp;    actual fun seekTo(millis: Long) {
+<b class="fc">&nbsp;        exoPlayer?.seekTo(millis)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Composable
+<b class="nc">&nbsp;    actual fun EnableLandscapeScreenMode() {</b>
+<b class="nc">&nbsp;        val activity = LocalContext.current as Activity</b>
+<b class="nc">&nbsp;        activity.window.setFlags(</b>
+<b class="nc">&nbsp;            WindowManager.LayoutParams.FLAG_FULLSCREEN,</b>
+<b class="nc">&nbsp;            WindowManager.LayoutParams.FLAG_FULLSCREEN</b>
+&nbsp;        )
+<b class="nc">&nbsp;        activity.window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION</b>
+<b class="nc">&nbsp;        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE</b>
+<b class="nc">&nbsp;    }</b>
+&nbsp;
+&nbsp;    @Composable
+<b class="nc">&nbsp;    actual fun EnablePortraitScreenMode() {</b>
+<b class="nc">&nbsp;        val activity = LocalContext.current as Activity</b>
+<b class="nc">&nbsp;        activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT</b>
+&nbsp;
+<b class="nc">&nbsp;    }</b>
+&nbsp;
+&nbsp;    actual fun releasePlayer() {
+<b class="fc">&nbsp;        stop()</b>
+<b class="fc">&nbsp;        exoPlayer?.release()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun stop() {
+<b class="fc">&nbsp;        exoPlayer?.stop()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Composable
+<b class="nc">&nbsp;    actual fun HandleActivityLifecycleStageChanges() {</b>
+<b class="nc">&nbsp;        DisposableEffectWithLifeCycle(</b>
+&nbsp;            onResume = { play() },
+&nbsp;            onPause = { pause() },
+&nbsp;            onDispose = { releasePlayer() })
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun addPlayList(listOfVideos: List&lt;VideoItem&gt;) {
+<b class="nc">&nbsp;        val listOfMediaItems = mutableListOf&lt;MediaItem&gt;()</b>
+&nbsp;
+<b class="nc">&nbsp;        for (videoItem in listOfVideos) {</b>
+<b class="nc">&nbsp;            listOfMediaItems.add(buildMediaItem(videoItem = videoItem))</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (listOfMediaItems.isNotEmpty())</b>
+<b class="nc">&nbsp;            exoPlayer?.addMediaItems(listOfMediaItems)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun setPlayList(listOfVideos: List&lt;VideoItem&gt;) {
+<b class="nc">&nbsp;        val listOfMediaItems = mutableListOf&lt;MediaItem&gt;()</b>
+&nbsp;
+<b class="nc">&nbsp;        for (videoItem in listOfVideos) {</b>
+<b class="nc">&nbsp;            listOfMediaItems.add(buildMediaItem(videoItem = videoItem))</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        if (listOfMediaItems.isNotEmpty())</b>
+<b class="nc">&nbsp;            exoPlayer?.setMediaItems(listOfMediaItems)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun playNextFromPlaylist() {
+<b class="nc">&nbsp;        if (exoPlayer?.hasNextMediaItem() == true) {</b>
+<b class="nc">&nbsp;            mediaDuration.value = 0</b>
+<b class="nc">&nbsp;            exoPlayer?.seekToNextMediaItem()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun playPreviousFromPlaylist() {
+<b class="nc">&nbsp;        if (exoPlayer?.hasPreviousMediaItem() == true) {</b>
+<b class="nc">&nbsp;            mediaDuration.value = 0</b>
+<b class="nc">&nbsp;            exoPlayer?.seekToPreviousMediaItem()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    private var currentPlaybackSpeed = 1f</b>
+&nbsp;    actual fun setPlaybackSpeed(selectedPlaybackSpeed: Float) {
+<b class="nc">&nbsp;        currentPlaybackSpeed = selectedPlaybackSpeed</b>
+<b class="nc">&nbsp;        exoPlayer?.setPlaybackSpeed(selectedPlaybackSpeed)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun setSpecificVideoQuality(videoQuality: VideoQuality) {
+<b class="nc">&nbsp;        try {</b>
+<b class="nc">&nbsp;            currentSelectedVideoQuality = videoQuality</b>
+<b class="nc">&nbsp;            exoPlayer?.let {</b>
+<b class="nc">&nbsp;                if (videoQuality.index == -1) {</b>
+<b class="nc">&nbsp;                    it.trackSelectionParameters = it.trackSelectionParameters.buildUpon()</b>
+<b class="nc">&nbsp;                        .clearOverride((videoTrackGroup as Tracks.Group).mediaTrackGroup).build()</b>
+&nbsp;                    return
+&nbsp;                }
+<b class="nc">&nbsp;                it.trackSelectionParameters =</b>
+<b class="nc">&nbsp;                    it.trackSelectionParameters</b>
+<b class="nc">&nbsp;                        .buildUpon()</b>
+<b class="nc">&nbsp;                        .setOverrideForType(</b>
+<b class="nc">&nbsp;                            TrackSelectionOverride(</b>
+<b class="nc">&nbsp;                                (videoTrackGroup as Tracks.Group).mediaTrackGroup,</b>
+<b class="nc">&nbsp;                                videoQuality.index</b>
+&nbsp;                            )
+<b class="nc">&nbsp;                        ).build()</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        } catch (e: Exception) {</b>
+<b class="nc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun getCurrentVideoStreamingQuality(): VideoQuality {
+<b class="nc">&nbsp;        return currentSelectedVideoQuality</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @OptIn(UnstableApi::class)
+&nbsp;    actual fun setSpecificCC(cc: ClosedCaptionForTrackSelector) {
+<b class="nc">&nbsp;        try {</b>
+<b class="nc">&nbsp;            currentSelectedCC = cc</b>
+<b class="nc">&nbsp;            if (cc.index == -1) {</b>
+<b class="nc">&nbsp;                setCCEnabled(false)</b>
+&nbsp;                return
+&nbsp;            }
+<b class="nc">&nbsp;            val trackGroupTemp = trackGroupsList?.get(cc.index) ?: textTrackGroup</b>
+<b class="nc">&nbsp;            exoPlayer?.let {</b>
+<b class="nc">&nbsp;                it.trackSelectionParameters = it.trackSelectionParameters.buildUpon()</b>
+<b class="nc">&nbsp;                    .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false).build()</b>
+<b class="nc">&nbsp;                it.trackSelectionParameters =</b>
+<b class="nc">&nbsp;                    it.trackSelectionParameters</b>
+<b class="nc">&nbsp;                        .buildUpon()</b>
+<b class="nc">&nbsp;                        .setOverrideForType(</b>
+<b class="nc">&nbsp;                            TrackSelectionOverride(</b>
+<b class="nc">&nbsp;                                (trackGroupTemp as Tracks.Group).mediaTrackGroup,</b>
+<b class="nc">&nbsp;                                0</b>
+&nbsp;                            )
+<b class="nc">&nbsp;                        ).build()</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        } catch (e: Exception) {</b>
+<b class="nc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+<b class="nc">&nbsp;    actual fun getCurrentCC(): ClosedCaptionForTrackSelector = currentSelectedCC</b>
+&nbsp;
+&nbsp;    actual fun setCCEnabled(enabled: Boolean) {
+<b class="nc">&nbsp;        exoPlayer?.let {</b>
+<b class="nc">&nbsp;            it.trackSelectionParameters = it.trackSelectionParameters.buildUpon()</b>
+<b class="nc">&nbsp;                .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, !enabled).build()</b>
+<b class="nc">&nbsp;        }</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun setVolumeLevel(volumeLevel: Float) {
+<b class="nc">&nbsp;        exoPlayer?.volume = volumeLevel</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun setSpecificAudioTrack(audioTrack: AudioTrack) {
+<b class="nc">&nbsp;        if (audioTrack.index &lt; 0) return</b>
+<b class="nc">&nbsp;        val trackGroupTemp = trackGroupsList?.get(audioTrack.index) ?: textTrackGroup</b>
+&nbsp;
+<b class="nc">&nbsp;        try {</b>
+<b class="nc">&nbsp;            exoPlayer?.let {</b>
+<b class="nc">&nbsp;                it.trackSelectionParameters =</b>
+<b class="nc">&nbsp;                    it.trackSelectionParameters</b>
+<b class="nc">&nbsp;                        .buildUpon()</b>
+<b class="nc">&nbsp;                        .setOverrideForType(</b>
+<b class="nc">&nbsp;                            TrackSelectionOverride(</b>
+<b class="nc">&nbsp;                                (trackGroupTemp as Tracks.Group).mediaTrackGroup,</b>
+<b class="nc">&nbsp;                                audioTrack.audioTrackGroupIndex</b>
+&nbsp;                            )
+<b class="nc">&nbsp;                        ).build()</b>
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;        } catch (e: Exception) {</b>
+<b class="nc">&nbsp;            e.printStackTrace()</b>
+&nbsp;        }
+&nbsp;
+&nbsp;    }
+&nbsp;
+&nbsp;    actual fun getCurrentSelectedAudioTrack(): AudioTrack? {
+<b class="nc">&nbsp;        return currentSelectedAudioTrack</b>
+&nbsp;    }
+&nbsp;
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2024-01-31 15:21</div>
+</div>
+</body>
+</html>

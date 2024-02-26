@@ -12,6 +12,7 @@ fun VideoViewController(videoPlayerController: VideoPlayerController,videoItem: 
           modifier = Modifier.fillMaxWidth(),
           videoItem = videoItem,
           videoPlayerController = videoPlayerController,
-          listOfVideoUrls = listOfVideoUrls
+          listOfVideoUrls = listOfVideoUrls,
+          currentVideoItemIndexInList = 0
      )
 }
